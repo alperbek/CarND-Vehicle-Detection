@@ -334,6 +334,13 @@ Inside the extract_window_features:
     - Since the same scaling on the training phase is required on the inference stage also, features are scaled.
     - By using features, a prediction is made (car or noncar)
     - If the prediction is 1 (car), a rectangle is drawn (with a correct scale) and heatmap is updated.
+ 
+In class SearchParameters,these parameters are defined:
+    - scale: This is where the size of the sliding windows is defined. Scaling the image with a constant and using (64, 64) sized windows basically changes the "sliding window size". Let us call the scaled window are as "effective area". 64x64 sized windows (when the scale is 1) are small for the test images and the video, and they are struggling to see the "big picture". To overcome this, 1.4 is selected as the scale, and this selection is made by general computer vision intuition and trial-error. Scales bigger than 1.7 was giving too large windows and introduced more errors. Also, scales smaller than 1.2 was poor on performance both in terms of quality and speed. So, 1.4 is ended up as a good scale.
+    - cell_per_step : Instead of defining the window overlap directly, step counts of the windows are defined by specifying what size of slide per step (in terms of cells) are to be done. When the cell_per_step is low (for example, 1), occurence of false positives are increased. But also, heatmap thresholding becomes easier since the cars are classified more "strongly" (more window overlaps on cars). So, I decided on a low cell_per_step parameter.
+    - ystart and ystop: These are defined according to two goals:
+        - Making the sliding window search only in the region of interest, so having a faster operation
+        - Reducing the amount of false positives by detecting irrelevant parts such as trees as cars.
 
 
 ```python
@@ -431,6 +438,15 @@ def visualize(fig, rows, cols, imgs, titles):
 ```
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
+
+A cell below, there is an example of the sliding window search without false positive rejection. 
+
+In general, to optimize the performance of the classifier,
+    - Feature vector is defined to have HOG parameters on YCrCb, spatial bins and color channel histograms.
+    - Searching parameters (scale, cell_per_step, ystart, ystop) is specified as explained in the Question 1 - Sliding Window Search
+    - Heatmap thresholding is applied to filter out detections with low overlapping windows (less than or equal to 3 windows) to reject false positives.
+    
+The optimized result is on the 2nd question of the "Video Implementation" together with the thresholding functions.
 
 
 ```python
@@ -621,7 +637,7 @@ To make it more robust, a more optimized tracking algorithm can be implemented b
 
 Since there is not much time (October cohort), I decided to postpone it after the end of the term.
 
-Also, I am thinking about re-implementing the algorithm with the deep learning approach. Using SVMs on this project was a nice experience, and makes me wonder what would be the performance of the pipeline with a deep learning approaches.
+Also, I am thinking about re-implementing the algorithm with the deep learning approach. Using SVMs on this project was a nice experience, and makes me wonder what would be the performance of the pipeline with a deep learning approach.
 
 
 ```python
